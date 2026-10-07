@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 
 # Create your models here.
@@ -5,15 +6,18 @@ from django.db import models
 
 class Task(models.Model):
     class Status(models.TextChoices):
-        PENDING = (
-            "pending",
-            "Pending",
-        )
+        PENDING = "pending", "Pending"
         COMPLETED = "completed", "Completed"
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="tasks",
+    )
 
     header = models.CharField(max_length=200)
     description = models.TextField()
-    asignee_email = models.EmailField()
+    assignee_email = models.EmailField()
     deadline = models.DateTimeField()
 
     status = models.CharField(
