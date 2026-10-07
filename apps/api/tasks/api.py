@@ -4,6 +4,9 @@ from ninja.security import SessionAuth
 
 from .models import Task
 from .schemas import TaskCreate, TaskUpdate, TaskOut
+import django_rq
+
+from .jobs import send_task_completed_email
 
 
 router = Router(auth=SessionAuth(csrf=False), tags=["tasks"])
@@ -70,5 +73,10 @@ def complete_task(request, task_id: int):
 
     task.status = Task.Status.COMPLETED
     task.save(update_fields=["status"])
+    queue = django_rq.get_queue("default")
+    queue.enqueue(
+        send_task_completed_email,
+        task.id,
+    )
 
     return task
