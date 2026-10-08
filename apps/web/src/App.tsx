@@ -1,122 +1,78 @@
 import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { Link, Outlet } from '@tanstack/react-router'
+import { api } from './api'
+import { userQuery } from './query-client'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  const client = useQueryClient()
+  const user = useQuery(userQuery)
+  const [identifier, setIdentifier] = useState('')
+  const login = useMutation({
+    mutationFn: api.login,
+    onSuccess: (data) => {
+      client.removeQueries({ queryKey: ['tasks'] })
+      client.removeQueries({ queryKey: ['notification-settings'] })
+      client.setQueryData(userQuery.queryKey, data)
+      setIdentifier('')
+    },
+  })
+  const logout = useMutation({
+    mutationFn: api.logout,
+    onSuccess: () => {
+      client.removeQueries({ queryKey: ['tasks'] })
+      client.removeQueries({ queryKey: ['notification-settings'] })
+      client.setQueryData(userQuery.queryKey, null)
+      login.reset()
+    },
+  })
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
+    <div className="app">
+      <header className="app-header">
+        <h1>Task list</h1>
+        {user.data && (
+          <div className="actions">
+            <span>{user.data.username}</span>
+            <button type="button" onClick={() => logout.mutate()} disabled={logout.isPending}>
+              {logout.isPending ? 'Signing out…' : 'Sign out'}
+            </button>
+          </div>
+        )}
+      </header>
+      {logout.error && <p className="error" role="alert">{logout.error.message}</p>}
+      {user.isPending ? <p role="status">Loading…</p> : user.isError ? (
         <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
+          <p className="error" role="alert">{user.error.message}</p>
+          <button type="button" onClick={() => void user.refetch()}>Try again</button>
         </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+      ) : user.data ? (
+        <>
+          <nav aria-label="Main navigation">
+            <Link to="/" activeOptions={{ exact: true }} activeProps={{ 'aria-current': 'page' }}>Tasks</Link>
+            <Link to="/settings" activeProps={{ 'aria-current': 'page' }}>Notification settings</Link>
+          </nav>
+          <main><Outlet /></main>
+        </>
+      ) : (
+        <main className="login">
+          <h2>Sign in</h2>
+          <p>Enter a username or email. A new account is created if needed.</p>
+          <form onSubmit={(event) => {
+            event.preventDefault()
+            login.mutate(identifier.trim())
+          }}>
+            <label htmlFor="identifier">Username or email</label>
+            <input id="identifier" autoComplete="username" required value={identifier}
+              onChange={(event) => setIdentifier(event.target.value)} />
+            {login.error && <p className="error" role="alert">{login.error.message}</p>}
+            <button disabled={login.isPending || !identifier.trim()}>
+              {login.isPending ? 'Signing in…' : 'Sign in'}
+            </button>
+          </form>
+        </main>
+      )}
+    </div>
   )
 }
-
-export default App

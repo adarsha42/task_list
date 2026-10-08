@@ -9,3 +9,7 @@ class UserOut(Schema):
     id: int
     username: str
     email: str
+
+
+class ErrorOut(Schema):
+    detail: str

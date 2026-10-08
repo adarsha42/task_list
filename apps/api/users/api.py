@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model, login, logout
 from ninja import Router
 
-from .schemas import LogIn, UserOut
+from .schemas import ErrorOut, LogIn, UserOut
 
 router = Router(tags=["auth"])
 
@@ -49,7 +49,7 @@ def logout_user(request):
     return {"success": True}
 
 
-@router.get("/me", response=UserOut)
+@router.get("/me", response={200: UserOut, 401: ErrorOut})
 def current_user(request):
     if not request.user.is_authenticated:
         return 401, {"detail": "Not authenticated"}
