@@ -77,6 +77,14 @@ docker compose down
 `docker compose down` stops the stack and preserves named volumes. Adding `-v`
 would delete those volumes and their data.
 
+
+## Commands useful for migrations
+```bash
+docker compose up -d --build
+docker compose exec backend python manage.py showmigrations tasks
+```
+All task migrations should show `[X]`. 
+
 ## For running frontend outside of docker
 
 If you want Vite on your host machine, start the API services without the
@@ -93,4 +101,3 @@ If the frontend container is already running, stop it with
 `docker compose stop frontend` first to free port 5173. Outside Docker, Vite's
 proxy defaults to `http://127.0.0.1:8000`. Inside Docker, Compose sets
 `API_PROXY_TARGET=http://backend:8000`.
-

@@ -6,10 +6,10 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-# Copy dependency files first for better layer caching
+# Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies into the project venv
+# Install dependencies into venv
 RUN uv sync --frozen --no-install-project
 
 # Copy the rest of the application code
@@ -37,5 +37,5 @@ ENV DJANGO_SETTINGS_MODULE=config.settings
 
 EXPOSE 8000
 
-# Run migrations then start the dev server
-CMD ["sh", "-c", "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
+# Check that model changes have migrations, apply them, then start the dev server
+CMD ["sh", "-c", "python manage.py makemigrations --check --dry-run --noinput && python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"]
