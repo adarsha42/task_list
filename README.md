@@ -25,5 +25,5 @@ pnpm install
 pnpm dev
 ```
 
-For frontend open up localhost:5173.
+To see the frontend app open up localhost:5173.
 
