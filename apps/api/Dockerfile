@@ -26,6 +26,9 @@ WORKDIR /app
 # Copy the entire app 
 COPY --from=builder /app /app
 
+# Create the data directory for the SQLite volume mount
+RUN mkdir -p /app/data
+
 # Place the venv's bin at the front of PATH
 ENV PATH="/app/.venv/bin:$PATH"
 

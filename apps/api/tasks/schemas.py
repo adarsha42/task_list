@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from ninja import Schema
+from ninja import Field, Schema
 
 
 class TaskCreate(Schema):
@@ -25,3 +25,11 @@ class TaskOut(Schema):
     deadline: datetime
     status: str
     notification_sent: bool
+
+
+class SchedulerConfigOut(Schema):
+    notify_hours_before: int
+
+
+class SchedulerConfigUpdate(Schema):
+    notify_hours_before: int = Field(ge=0)

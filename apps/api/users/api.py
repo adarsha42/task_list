@@ -1,18 +1,9 @@
 from django.contrib.auth import get_user_model, login, logout
 from ninja import Router
-from django.http import HttpResponse
-from django.views.decorators.csrf import csrf_exempt, ensure_csrf_cookie
 
 from .schemas import LogIn, UserOut
 
 router = Router(tags=["auth"])
-
-
-@router.get("/csrf", auth=None)
-@ensure_csrf_cookie
-@csrf_exempt
-def csrf_token(request):
-    return HttpResponse(status=204)
 
 
 User = get_user_model()
