@@ -21,13 +21,36 @@ services:
       - sqlite_data:/app/data
     environment:
       - DJANGO_DEBUG=True
-      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,backend
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_PATH=/app/data/db.sqlite3
       - EMAIL_HOST_USER=${EMAIL_HOST_USER}
       - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
     depends_on:
       redis:
+        condition: service_healthy
+
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/openapi.json', timeout=2)"
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 10s
+
+  frontend:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      - API_PROXY_TARGET=http://backend:8000
+    depends_on:
+      backend:
         condition: service_healthy
 
   rq-worker:
@@ -47,7 +70,7 @@ services:
       redis:
         condition: service_healthy
       backend:
-        condition: service_started
+        condition: service_healthy
 
   rq-scheduler:
     build:
@@ -72,6 +95,8 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_PATH=/app/data/db.sqlite3
     depends_on:
+      backend:
+        condition: service_healthy
       redis:
         condition: service_healthy
       rq-scheduler:
