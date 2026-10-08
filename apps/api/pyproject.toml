@@ -4,4 +4,6 @@ version = "0.1.0"
 requires-python = ">=3.12"
 dependencies = [
     "django-ninja>=1.7.1",
+    "django-rq>=4.2.0",
+    "rq-scheduler>=0.14.0",
 ]

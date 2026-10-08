@@ -21,10 +21,23 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+
 SECRET_KEY = os.environ.get(
     "DJANGO_SECRET_KEY",
     "django-insecure-@oo8pg)@i^+z0xc!1mpp(-e@j8nzqey+9$njk_bpmnqo*swqc4",
 )
+
+# redis queue setup
+RQ_QUEUES = {
+    "default": {
+        "URL": os.getenv(
+            "REDIS_URL",
+            "redis://localhost:6379/0",
+        ),
+        "DEFAULT_TIMEOUT": 360,
+    }
+}
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get("DJANGO_DEBUG", "True").lower() in ("true", "1", "yes")
@@ -43,6 +56,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "tasks",
     "users",
+    "django_rq",
 ]
 
 MIDDLEWARE = [
@@ -81,7 +95,7 @@ WSGI_APPLICATION = "config.wsgi.application"
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
+        "NAME": os.environ.get("DATABASE_PATH", BASE_DIR / "db.sqlite3"),
     }
 }
 
@@ -123,11 +137,20 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 
-# Email
+# Email — Django 6.1+ uses MAILERS instead of the old EMAIL_* settings
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
 
 MAILERS = {
     "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
+        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+        "OPTIONS": {
+            "host": "smtp.gmail.com",
+            "port": 587,
+            "username": os.getenv("EMAIL_HOST_USER", ""),
+            "password": os.getenv("EMAIL_HOST_PASSWORD", ""),
+            "use_tls": True,
+        },
+        "DEFAULT_FROM_EMAIL": os.getenv("EMAIL_HOST_USER", ""),
     },
 }
+

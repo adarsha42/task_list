@@ -6,7 +6,7 @@ services:
     volumes:
       - redis_data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -23,9 +23,59 @@ services:
       - DJANGO_DEBUG=True
       - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
       - REDIS_URL=redis://redis:6379/0
+      - DATABASE_PATH=/app/data/db.sqlite3
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
     depends_on:
       redis:
         condition: service_healthy
+
+  rq-worker:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    command: [ "python", "manage.py", "rqworker", "default" ]
+    volumes:
+      - sqlite_data:/app/data
+    environment:
+      - DJANGO_DEBUG=True
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_PATH=/app/data/db.sqlite3
+      - EMAIL_HOST_USER=${EMAIL_HOST_USER}
+      - EMAIL_HOST_PASSWORD=${EMAIL_HOST_PASSWORD}
+    depends_on:
+      redis:
+        condition: service_healthy
+      backend:
+        condition: service_started
+
+  rq-scheduler:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    command: [ "rqscheduler", "--host", "redis", "--port", "6379", "--db", "0" ]
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      redis:
+        condition: service_healthy
+
+  deadline-scheduler:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+    command: [ "python", "manage.py", "schedule_deadline_checker", "--interval", "60" ]
+    volumes:
+      - sqlite_data:/app/data
+    environment:
+      - DJANGO_DEBUG=True
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_PATH=/app/data/db.sqlite3
+    depends_on:
+      redis:
+        condition: service_healthy
+      rq-scheduler:
+        condition: service_started
 
 volumes:
   redis_data:
