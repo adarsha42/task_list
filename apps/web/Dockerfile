@@ -4,10 +4,13 @@ WORKDIR /app
 
 RUN npm install -g pnpm@11.9.0
 
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install --frozen-lockfile
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY apps/web/package.json ./apps/web/package.json
+RUN pnpm install --frozen-lockfile --filter @task-list/web
 
-COPY . .
+COPY apps/web ./apps/web
+
+WORKDIR /app/apps/web
 
 EXPOSE 5173
 

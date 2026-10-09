@@ -19,6 +19,7 @@ class Task(models.Model):
     description = models.TextField()
     assignee_email = models.EmailField()
     deadline = models.DateTimeField()
+    deadline_timezone = models.CharField(max_length=64, default="UTC")
 
     status = models.CharField(
         max_length=20, choices=Status.choices, default=Status.PENDING

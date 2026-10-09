@@ -6,4 +6,9 @@ dependencies = [
     "django-ninja>=1.7.1",
     "django-rq>=4.2.0",
     "rq-scheduler>=0.14.0",
+    "tzdata>=2026.5",
 ]
+
+# Django runs directly from its source directory rather than as an installed package.
+[tool.uv]
+package = false

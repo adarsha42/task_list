@@ -29,6 +29,7 @@ export default function TaskForm({ task, pending, error, onSubmit, onCancel }: P
         description: description.trim(),
         assignee_email: email.trim(),
         deadline: new Date(deadline).toISOString(),
+        deadline_timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       })
     }}>
       <fieldset disabled={pending}>

@@ -63,7 +63,7 @@ def update_task(request, task_id: int, payload: TaskUpdate):
         user=request.user,
     )
 
-    for field, value in payload.model_dump().items():
+    for field, value in payload.model_dump(exclude_unset=True).items():
         setattr(task, field, value)
 
     task.save()

@@ -1,0 +1,16 @@
+{
+  "name": "task-list-project",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev:web": "pnpm --filter @task-list/web dev",
+    "dev:api": "uv run --package backend python apps/api/manage.py runserver 0.0.0.0:8000",
+    "build": "pnpm --filter @task-list/web build",
+    "lint": "pnpm --filter @task-list/web lint",
+    "check:api": "uv run --package backend python apps/api/manage.py check",
+    "migrate": "uv run --package backend python apps/api/manage.py migrate"
+  }
+}

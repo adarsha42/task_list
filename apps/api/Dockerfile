@@ -6,25 +6,24 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
 WORKDIR /app
 
-# Copy dependency files
+# Copy workspace manifests before source code so dependency layers can be cached
 COPY pyproject.toml uv.lock ./
+COPY apps/api/pyproject.toml ./apps/api/pyproject.toml
 
-# Install dependencies into venv
-RUN uv sync --frozen --no-install-project
+# Install the backend's locked dependencies into the root workspace venv
+RUN uv sync --frozen --package backend --no-dev
 
-# Copy the rest of the application code
-COPY . .
-
-# Sync again to install the project itself
-RUN uv sync --frozen
+# The backend is a source application, so it needs no package build step
+COPY apps/api ./apps/api
 
 
 FROM python:3.12-slim AS runtime
 
-WORKDIR /app
+WORKDIR /app/apps/api
 
-# Copy the entire app 
-COPY --from=builder /app /app
+# Copy the Python environment and backend source into the runtime image
+COPY --from=builder /app/.venv /app/.venv
+COPY --from=builder /app/apps/api /app/apps/api
 
 # Create the data directory for the SQLite volume mount
 RUN mkdir -p /app/data

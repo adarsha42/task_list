@@ -9,6 +9,7 @@ export interface TaskInput {
   description: string
   assignee_email: string
   deadline: string
+  deadline_timezone: string
 }
 
 export interface Task extends TaskInput {

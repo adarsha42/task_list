@@ -1,6 +1,8 @@
 from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from ninja import Field, Schema
+from pydantic import field_validator
 
 
 class TaskCreate(Schema):
@@ -8,13 +10,20 @@ class TaskCreate(Schema):
     description: str
     assignee_email: str
     deadline: datetime
+    deadline_timezone: str = Field(default="UTC", max_length=64)
+
+    @field_validator("deadline_timezone")
+    @classmethod
+    def validate_deadline_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except (ZoneInfoNotFoundError, ValueError):
+            raise ValueError("Use a valid IANA time zone, such as Asia/Kathmandu.") from None
+        return value
 
 
-class TaskUpdate(Schema):
-    header: str
-    description: str
-    assignee_email: str
-    deadline: datetime
+class TaskUpdate(TaskCreate):
+    pass
 
 
 class TaskOut(Schema):
@@ -23,6 +32,7 @@ class TaskOut(Schema):
     description: str
     assignee_email: str
     deadline: datetime
+    deadline_timezone: str
     status: str
     notification_sent: bool
 
